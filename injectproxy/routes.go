@@ -34,9 +34,10 @@ const (
 )
 
 type routes struct {
-	upstream *url.URL
-	handler  http.Handler
-	label    string
+	upstream   *url.URL
+	handler    http.Handler
+	label      string
+	labelValue string
 
 	mux            *http.ServeMux
 	modifiers      map[string]func(*http.Response) error
@@ -126,7 +127,7 @@ func (s *strictMux) Handle(pattern string, handler http.Handler) error {
 	return nil
 }
 
-func NewRoutes(upstream *url.URL, label string, opts ...Option) (*routes, error) {
+func NewRoutes(upstream *url.URL, label string, labelValue string, opts ...Option) (*routes, error) {
 	opt := options{}
 	for _, o := range opts {
 		o.apply(&opt)
@@ -134,7 +135,7 @@ func NewRoutes(upstream *url.URL, label string, opts ...Option) (*routes, error)
 
 	proxy := httputil.NewSingleHostReverseProxy(upstream)
 
-	r := &routes{upstream: upstream, handler: proxy, label: label, errorOnReplace: opt.errorOnReplace}
+	r := &routes{upstream: upstream, handler: proxy, label: label, labelValue: labelValue, errorOnReplace: opt.errorOnReplace}
 	mux := newStrictMux()
 
 	errs := merrors.New(
@@ -199,9 +200,13 @@ func (r *routes) enforceLabel(h http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		lvalue := req.FormValue(r.label)
 		if lvalue == "" {
-			http.Error(w, fmt.Sprintf("Bad request. The %q query parameter must be provided.", r.label), http.StatusBadRequest)
-			return
+			if r.labelValue == "" {
+				http.Error(w, fmt.Sprintf("Bad request. The %q query parameter must be provided.", r.label), http.StatusBadRequest)
+				return
+			}
+			lvalue = r.labelValue
 		}
+
 		req = req.WithContext(withLabelValue(req.Context(), lvalue))
 
 		// Remove the proxy label from the query parameters.
@@ -282,7 +287,7 @@ func (r *routes) query(w http.ResponseWriter, req *http.Request) {
 	e := NewEnforcer(r.errorOnReplace,
 		[]*labels.Matcher{{
 			Name:  r.label,
-			Type:  labels.MatchEqual,
+			Type:  labels.MatchRegexp,
 			Value: mustLabelValue(req.Context()),
 		}}...)
 

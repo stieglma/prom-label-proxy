@@ -32,6 +32,7 @@ func main() {
 		insecureListenAddress  string
 		upstream               string
 		label                  string
+		labelValue             string
 		enableLabelAPIs        bool
 		unsafePassthroughPaths string // Comma-delimited string.
 		errorOnReplace         bool
@@ -50,6 +51,7 @@ func main() {
 		"This option is checked after Prometheus APIs, you cannot override enforced API endpoints to be not enforced with this option. Use carefully as it can easily cause a data leak if the provided path is an important "+
 		"API (like /api/v1/configuration) which isn't enforced by prom-label-proxy. NOTE: \"all\" matching paths like \"/\" or \"\" and regex are not allowed.")
 	flagset.BoolVar(&errorOnReplace, "error-on-replace", false, "When specified, the proxy will return HTTP status code 400 if the query already contains a label matcher that differs from the one the proxy would inject.")
+	flagset.StringVar(&labelValue, "labelValue", "", "TODO")
 
 	//nolint: errcheck // Parse() will exit on error.
 	flagset.Parse(os.Args[1:])
@@ -76,7 +78,7 @@ func main() {
 	if errorOnReplace {
 		opts = append(opts, injectproxy.WithErrorOnReplace())
 	}
-	routes, err := injectproxy.NewRoutes(upstreamURL, label, opts...)
+	routes, err := injectproxy.NewRoutes(upstreamURL, label, labelValue, opts...)
 	if err != nil {
 		log.Fatalf("Failed to create injectproxy Routes: %v", err)
 	}

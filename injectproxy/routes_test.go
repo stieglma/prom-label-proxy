@@ -159,57 +159,57 @@ func TestWithPassthroughPaths(t *testing.T) {
 
 	t.Run("invalid passthrough options", func(t *testing.T) {
 		// Duplicated /api.
-		_, err := NewRoutes(m.url, proxyLabel, WithPassthroughPaths([]string{"/api1", "/api2/something", "/api1"}))
+		_, err := NewRoutes(m.url, proxyLabel, "", WithPassthroughPaths([]string{"/api1", "/api2/something", "/api1"}))
 		if err == nil {
 			t.Fatal("expected error")
 		}
 		// Wrong format, params in path.
-		_, err = NewRoutes(m.url, proxyLabel, WithPassthroughPaths([]string{"/api1?args=1", "/api1"}))
+		_, err = NewRoutes(m.url, proxyLabel, "", WithPassthroughPaths([]string{"/api1?args=1", "/api1"}))
 		if err == nil {
 			t.Fatal("expected error")
 		}
 		// / is not allowed.
-		_, err = NewRoutes(m.url, proxyLabel, WithPassthroughPaths([]string{"/", "/api2/something", "/api1"}))
+		_, err = NewRoutes(m.url, proxyLabel, "", WithPassthroughPaths([]string{"/", "/api2/something", "/api1"}))
 		if err == nil {
 			t.Fatal("expected error")
 		}
 		// "" is not allowed.
-		_, err = NewRoutes(m.url, proxyLabel, WithPassthroughPaths([]string{"/api1", "/api2/something", "", "/api3"}))
+		_, err = NewRoutes(m.url, proxyLabel, "", WithPassthroughPaths([]string{"/api1", "/api2/something", "", "/api3"}))
 		if err == nil {
 			t.Fatal("expected error")
 		}
 		// Duplication with existing enforced path is not allowed.
-		_, err = NewRoutes(m.url, proxyLabel, WithPassthroughPaths([]string{"/api1", "/api2/something", "/federate", "/api3"}))
+		_, err = NewRoutes(m.url, proxyLabel, "", WithPassthroughPaths([]string{"/api1", "/api2/something", "/federate", "/api3"}))
 		if err == nil {
 			t.Fatal("expected error")
 		}
 		// Duplication with existing enforced path is not allowed.
-		_, err = NewRoutes(m.url, proxyLabel, WithPassthroughPaths([]string{"/api1", "/api2/something", "/federate/", "/api3"}))
+		_, err = NewRoutes(m.url, proxyLabel, "", WithPassthroughPaths([]string{"/api1", "/api2/something", "/federate/", "/api3"}))
 		if err == nil {
 			t.Fatal("expected error")
 		}
 		// Duplication with existing enforced path is not allowed.
-		_, err = NewRoutes(m.url, proxyLabel, WithPassthroughPaths([]string{"/api1", "/api2/something", "/federate/some", "/api3"}))
+		_, err = NewRoutes(m.url, proxyLabel, "", WithPassthroughPaths([]string{"/api1", "/api2/something", "/federate/some", "/api3"}))
 		if err == nil {
 			t.Fatal("expected error")
 		}
 		// api4 is not valid URL path (does not start with /)
-		_, err = NewRoutes(m.url, proxyLabel, WithPassthroughPaths([]string{"/api1", "/api2/something", "api4", "/api3"}))
+		_, err = NewRoutes(m.url, proxyLabel, "", WithPassthroughPaths([]string{"/api1", "/api2/something", "api4", "/api3"}))
 		if err == nil {
 			t.Fatal("expected error")
 		}
 		// api4/ is not valid URL path (does not start with /)
-		_, err = NewRoutes(m.url, proxyLabel, WithPassthroughPaths([]string{"/api1", "/api2/something", "api4/", "/api3"}))
+		_, err = NewRoutes(m.url, proxyLabel, "", WithPassthroughPaths([]string{"/api1", "/api2/something", "api4/", "/api3"}))
 		if err == nil {
 			t.Fatal("expected error")
 		}
 		// api4/something is not valid URL path (does not start with /)
-		_, err = NewRoutes(m.url, proxyLabel, WithPassthroughPaths([]string{"/api1", "/api2/something", "api4/something", "/api3"}))
+		_, err = NewRoutes(m.url, proxyLabel, "", WithPassthroughPaths([]string{"/api1", "/api2/something", "api4/something", "/api3"}))
 		if err == nil {
 			t.Fatal("expected error")
 		}
 	})
-	r, err := NewRoutes(m.url, proxyLabel, WithPassthroughPaths([]string{"/api1", "/api2/something", "/graph/"}))
+	r, err := NewRoutes(m.url, proxyLabel, "", WithPassthroughPaths([]string{"/api1", "/api2/something", "/graph/"}))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -315,7 +315,7 @@ func TestMatch(t *testing.T) {
 					),
 				)
 				defer m.Close()
-				r, err := NewRoutes(m.url, proxyLabel, WithEnabledLabelsAPI())
+				r, err := NewRoutes(m.url, proxyLabel, "", WithEnabledLabelsAPI())
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
@@ -856,7 +856,7 @@ func TestQuery(t *testing.T) {
 				if tc.errorOnReplace {
 					opts = append(opts, WithErrorOnReplace())
 				}
-				r, err := NewRoutes(m.url, proxyLabel, opts...)
+				r, err := NewRoutes(m.url, proxyLabel, "", opts...)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
