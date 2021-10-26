@@ -358,16 +358,22 @@ func enforceQueryValues(e *Enforcer, v url.Values) (values string, noQuery bool,
 func (r *routes) matcher(w http.ResponseWriter, req *http.Request) {
 	matcher := &labels.Matcher{
 		Name:  r.label,
-		Type:  labels.MatchEqual,
+		Type:  labels.MatchRegexp,
 		Value: mustLabelValue(req.Context()),
 	}
 	q := req.URL.Query()
 
-	if err := injectMatcher(q, matcher); err != nil {
-		return
-	}
-	req.URL.RawQuery = q.Encode()
-	if req.Method == http.MethodPost {
+	if req.Method == http.MethodGet {
+		if err := injectMatcher(q, matcher); err != nil {
+			return
+		}
+		req.URL.RawQuery = q.Encode()
+
+	} else if req.Method == http.MethodPost {
+		// in case of post requests delete potential match query params
+		// as they lead to errors when targeting prometheus
+		q.Del(matchersParam)
+		req.URL.RawQuery = q.Encode()
 		if err := req.ParseForm(); err != nil {
 			return
 		}
